@@ -1,5 +1,8 @@
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, UploadFile, File, Response
 from fastapi.middleware.cors import CORSMiddleware
+# from starlette.responses import StreamingResponse
 from PIL import Image
 import io
 from core import colorize_image
@@ -7,8 +10,11 @@ import numpy as np
 
 
 app = FastAPI()
+load_dotenv()
 
-origins = ["http://127.0.0.1:8000/"]
+origins = [
+    os.getenv("PROXY_SERVER_URL"),
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,6 +23,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # -----------------------
 # API endpoint
@@ -27,10 +34,11 @@ async def colorize(file: UploadFile = File(...)):
     # Change image consists of 0 to 1, to 0 to 255 which can be changed to PNG byte column
     numpy_image = colorize_image(data) * 255
     numpy_image = numpy_image.astype(np.uint8)
-    
+
     # PIL Image -> PNG byte column
     buf = io.BytesIO()
     pil_img = Image.fromarray(numpy_image)
     pil_img.save(buf, format="PNG")
 
     return Response(content=buf.getvalue(), media_type="image/png")
+    # return StreamingResponse(io.BytesIO(pil_img.tobytes()), media_type="image/png")
