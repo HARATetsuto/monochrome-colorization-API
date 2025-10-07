@@ -7,3 +7,4 @@ pillow
 IPython
 uvicorn
 dotenv
+fastapi
